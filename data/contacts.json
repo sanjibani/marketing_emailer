@@ -1,0 +1,266 @@
+[
+  {
+    "id": "1",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "company": "Acme Corp",
+    "tags": [
+      "lead",
+      "saas"
+    ],
+    "createdAt": "2026-01-21T00:00:00Z"
+  },
+  {
+    "name": "Alice Marketing",
+    "email": "alice@example.com",
+    "company": "TechCorp",
+    "tags": [
+      "lead",
+      "saas"
+    ],
+    "id": "1769011388430",
+    "createdAt": "2026-01-21T16:03:08.431Z"
+  },
+  {
+    "name": "Bob CTO",
+    "email": "bob@example.com",
+    "company": "StartUpInc",
+    "tags": [
+      "tech",
+      "decision-maker"
+    ],
+    "id": "1769011421622",
+    "createdAt": "2026-01-21T16:03:41.622Z"
+  },
+  {
+    "id": "17713354840405437",
+    "name": "Director, CAZRI",
+    "email": "director.cazri@icar.gov.in",
+    "company": "Central Arid Zone Research Institute",
+    "tags": [
+      "Research",
+      "Government"
+    ],
+    "createdAt": "2026-02-17T13:38:04.040Z"
+  },
+  {
+    "id": "17713354840480745",
+    "name": "Director, CFTRI",
+    "email": "director@cftri.res.in",
+    "company": "Central Food Technological Research Institute",
+    "tags": [
+      "Research",
+      "Government"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840488315",
+    "name": "Director, CIFRI",
+    "email": "cifri@vsncifri@vsnl.com",
+    "company": "Central Inland Fisheries Research Institute",
+    "tags": [
+      "Research",
+      "Government"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840483218",
+    "name": "Director, CICR",
+    "email": "cicrnagpur@gmail.com",
+    "company": "Central Institute for Cotton Research",
+    "tags": [
+      "Research",
+      "Government"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840486370",
+    "name": "Director, CPCRI",
+    "email": "director.cpcri@icar.gov.in",
+    "company": "Central Plantation Crops Research Institute",
+    "tags": [
+      "Research",
+      "Government"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840480194",
+    "name": "Registrar, NDUAT",
+    "email": "registrar.nd.15@gmail.com",
+    "company": "Acharya Narendra Deva University",
+    "tags": [
+      "University",
+      "Education"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840489763",
+    "name": "Registrar, JAU",
+    "email": "registrar@jau.in",
+    "company": "Junagadh Agricultural University",
+    "tags": [
+      "University",
+      "Education"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840486132",
+    "name": "Registrar, OUAT",
+    "email": "registrar@ouat.ac.in",
+    "company": "Orissa University of Agriculture",
+    "tags": [
+      "University",
+      "Education"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840482426",
+    "name": "Academic, PAU",
+    "email": "academic@pau.edu",
+    "company": "Punjab Agricultural University",
+    "tags": [
+      "University",
+      "Education"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840487939",
+    "name": "COE, PJTAU",
+    "email": "coe@pjtau.edu.in",
+    "company": "Professor Jayashankar Telangana Agricultural University",
+    "tags": [
+      "University",
+      "Education"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840488374",
+    "name": "KVK Jaipur",
+    "email": "kvkchomu@gmail.com",
+    "company": "Krishi Vigyan Kendra Jaipur",
+    "tags": [
+      "KVK",
+      "Outreach"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840480464",
+    "name": "KVK Buxar",
+    "email": "buxarkvk@gmail.com",
+    "company": "Krishi Vigyan Kendra Buxar",
+    "tags": [
+      "KVK",
+      "Outreach"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840489640",
+    "name": "KVK Dharwad",
+    "email": "kvk.Dharwad@icar.gov.in",
+    "company": "Krishi Vigyan Kendra Dharwad",
+    "tags": [
+      "KVK",
+      "Outreach"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840483840",
+    "name": "KVK Delhi",
+    "email": "kvkujwa@yahoo.com",
+    "company": "Krishi Vigyan Kendra Delhi",
+    "tags": [
+      "KVK",
+      "Outreach"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840484228",
+    "name": "Ballari FPO",
+    "email": "ballarifarmers@gmail.com",
+    "company": "Ballari Farmers Producer Company",
+    "tags": [
+      "FPO",
+      "Farmer Group"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840484610",
+    "name": "Hosakote FPO",
+    "email": "hoskotefpo@gmail.com",
+    "company": "Shri Venegopalaswamy Horticulture FPC",
+    "tags": [
+      "FPO",
+      "Farmer Group"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840488995",
+    "name": "Moynajhora FPO",
+    "email": "moynajhorafarmer.pcl@gmail.com",
+    "company": "Moynajhora Farmers Producer Company",
+    "tags": [
+      "FPO",
+      "Farmer Group"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840484096",
+    "name": "MAHAFPC",
+    "email": "mahafpc@gmail.com",
+    "company": "Maharashtra Maha Farmers Producer Company",
+    "tags": [
+      "FPO",
+      "Consortium"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840481113",
+    "name": "Agriva India",
+    "email": "agrivaindia@gmail.com",
+    "company": "Agriva India Hi-Tech Farmer Producer Company",
+    "tags": [
+      "FPO",
+      "Farmer Group"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840482430",
+    "name": "Support, Agritek",
+    "email": "support@agritek.co.in",
+    "company": "ECOAGRITEK AI SOLUTIONS",
+    "tags": [
+      "Startup",
+      "Agritech"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  },
+  {
+    "id": "17713354840486994",
+    "name": "Info, Agritech Int",
+    "email": "info@agritechint.in",
+    "company": "Agritech International",
+    "tags": [
+      "Startup",
+      "Agritech"
+    ],
+    "createdAt": "2026-02-17T13:38:04.048Z"
+  }
+]
