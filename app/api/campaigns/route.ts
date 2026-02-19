@@ -1,15 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCampaigns, addCampaign, updateCampaign, deleteCampaign } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-    const campaigns = getCampaigns();
-    return NextResponse.json(campaigns);
+    try {
+        const campaigns = await prisma.campaign.findMany({
+            include: {
+                stats: true,
+                recipients: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // Transform to match frontend expectation
+        const formattedCampaigns = campaigns.map(c => ({
+            ...c,
+            contactIds: c.recipients.map(r => r.contactId),
+            stats: c.stats || { sent: 0, opened: 0, clicked: 0 }
+        }));
+
+        return NextResponse.json(formattedCampaigns);
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Failed to fetch campaigns' },
+            { status: 500 }
+        );
+    }
 }
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name, templateId, contactIds, scheduledAt } = body;
+        const { name, description, templateId, contactIds, scheduledAt } = body;
 
         if (!name || !templateId || !contactIds?.length) {
             return NextResponse.json(
@@ -18,15 +39,34 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const campaign = addCampaign({
-            name,
-            templateId,
-            contactIds,
-            scheduledAt: scheduledAt || null,
+        const campaign = await prisma.campaign.create({
+            data: {
+                name,
+                description,
+                template: { connect: { id: templateId } },
+                status: 'draft',
+                scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+                recipients: {
+                    create: contactIds.map((id: string) => ({
+                        contact: { connect: { id } }
+                    }))
+                },
+                stats: {
+                    create: { sent: 0, opened: 0, clicked: 0 }
+                }
+            },
+            include: {
+                recipients: true,
+                stats: true
+            }
         });
 
-        return NextResponse.json(campaign, { status: 201 });
+        return NextResponse.json({
+            ...campaign,
+            contactIds: campaign.recipients.map(r => r.contactId)
+        }, { status: 201 });
     } catch (error) {
+        console.error("Error creating campaign:", error);
         return NextResponse.json(
             { error: 'Failed to create campaign' },
             { status: 500 }
@@ -46,13 +86,16 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        const campaign = updateCampaign(id, updates);
-        if (!campaign) {
-            return NextResponse.json(
-                { error: 'Campaign not found' },
-                { status: 404 }
-            );
-        }
+        // Handle Status Update separately if needed, or simple updates
+        // For simple field updates:
+        const campaign = await prisma.campaign.update({
+            where: { id },
+            data: {
+                ...updates,
+                // If scheduledAt is passed, ensure it is Date
+                ...(updates.scheduledAt && { scheduledAt: new Date(updates.scheduledAt) })
+            }
+        });
 
         return NextResponse.json(campaign);
     } catch (error) {
@@ -75,13 +118,9 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        const deleted = deleteCampaign(id);
-        if (!deleted) {
-            return NextResponse.json(
-                { error: 'Campaign not found' },
-                { status: 404 }
-            );
-        }
+        await prisma.campaign.delete({
+            where: { id }
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {

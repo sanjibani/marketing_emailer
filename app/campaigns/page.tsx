@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, Send, Trash2, Users, FileText, Check, MoreHorizontal, Search, Filter } from 'lucide-react';
 
 interface Contact {
@@ -34,6 +35,7 @@ interface Campaign {
 }
 
 export default function CampaignsPage() {
+    const router = useRouter();
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -92,7 +94,8 @@ export default function CampaignsPage() {
         }
     };
 
-    const handleSend = async (campaignId: string) => {
+    const handleSend = async (campaignId: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent row click
         if (!confirm('Are you sure you want to send this campaign now?')) return;
 
         setSending(campaignId);
@@ -116,7 +119,8 @@ export default function CampaignsPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent row click
         if (!confirm('Are you sure you want to delete this campaign?')) return;
         try {
             const res = await fetch(`/api/campaigns?id=${id}`, { method: 'DELETE' });
@@ -200,7 +204,12 @@ export default function CampaignsPage() {
                             </thead>
                             <tbody>
                                 {campaigns.map((campaign) => (
-                                    <tr key={campaign.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                    <tr
+                                        key={campaign.id}
+                                        style={{ borderBottom: '1px solid var(--border-color)', cursor: 'pointer' }}
+                                        onClick={() => router.push(`/campaigns/${campaign.id}`)}
+                                        className="hover:bg-gray-50"
+                                    >
                                         <td style={{ paddingLeft: 0 }}>
                                             <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{campaign.name}</div>
                                             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Created {new Date(campaign.createdAt).toLocaleDateString()}</div>
@@ -237,7 +246,7 @@ export default function CampaignsPage() {
                                                     <button
                                                         className="btn btn-primary btn-sm"
                                                         style={{ padding: '6px 12px' }}
-                                                        onClick={() => handleSend(campaign.id)}
+                                                        onClick={(e) => handleSend(campaign.id, e)}
                                                         disabled={sending === campaign.id}
                                                     >
                                                         {sending === campaign.id ? <div className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></div> : <Send size={14} />}
@@ -247,7 +256,7 @@ export default function CampaignsPage() {
                                                 <button
                                                     className="btn btn-secondary btn-icon"
                                                     style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                    onClick={() => handleDelete(campaign.id)}
+                                                    onClick={(e) => handleDelete(campaign.id, e)}
                                                 >
                                                     <Trash2 size={14} color="var(--accent-danger)" />
                                                 </button>

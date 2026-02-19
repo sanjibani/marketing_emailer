@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCampaign, getTemplate, getContact, updateCampaign } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { sendEmail, personalize } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
@@ -14,7 +14,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const campaign = getCampaign(campaignId);
+        const campaign = await prisma.campaign.findUnique({
+            where: { id: campaignId },
+            include: {
+                template: true,
+                recipients: {
+                    include: { contact: true }
+                }
+            }
+        });
+
         if (!campaign) {
             return NextResponse.json(
                 { error: 'Campaign not found' },
@@ -22,8 +31,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const template = getTemplate(campaign.templateId);
-        if (!template) {
+        if (!campaign.template) {
             return NextResponse.json(
                 { error: 'Template not found' },
                 { status: 404 }
@@ -31,7 +39,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Update campaign status
-        updateCampaign(campaignId, { status: 'sending' });
+        await prisma.campaign.update({
+            where: { id: campaignId },
+            data: { status: 'sending' }
+        });
 
         const results = {
             sent: 0,
@@ -40,23 +51,19 @@ export async function POST(request: NextRequest) {
         };
 
         // Send emails to each contact
-        for (const contactId of campaign.contactIds) {
-            const contact = getContact(contactId);
-            if (!contact) {
-                results.errors.push(`Contact ${contactId} not found`);
-                results.failed++;
-                continue;
-            }
+        for (const recipient of campaign.recipients) {
+            const contact = recipient.contact;
 
-            const personalizedSubject = personalize(template.subject, {
+            // Personalize content
+            const personalizedSubject = personalize(campaign.template.subject, {
                 name: contact.name,
-                company: contact.company,
+                company: contact.company || '',
                 email: contact.email,
             });
 
-            const personalizedBody = personalize(template.body, {
+            const personalizedBody = personalize(campaign.template.body, {
                 name: contact.name,
-                company: contact.company,
+                company: contact.company || '',
                 email: contact.email,
             });
 
@@ -68,21 +75,52 @@ export async function POST(request: NextRequest) {
 
             if (result.success) {
                 results.sent++;
+                // Create successful log
+                await prisma.emailLog.create({
+                    data: {
+                        campaignId,
+                        recipient: contact.email,
+                        status: 'sent',
+                        sentAt: new Date()
+                    }
+                });
             } else {
                 results.failed++;
-                results.errors.push(`Failed to send to ${contact.email}`);
+                const errorMsg = result.error ? String(result.error) : 'Unknown error';
+                results.errors.push(`Failed to send to ${contact.email}: ${errorMsg}`);
+
+                // Create failed log
+                await prisma.emailLog.create({
+                    data: {
+                        campaignId,
+                        recipient: contact.email,
+                        status: 'failed',
+                        error: errorMsg,
+                        sentAt: new Date()
+                    }
+                });
             }
         }
 
         // Update campaign with final stats
-        updateCampaign(campaignId, {
-            status: 'sent',
-            sentAt: new Date().toISOString(),
-            stats: {
-                sent: results.sent,
-                opened: 0,
-                clicked: 0,
-            },
+        await prisma.campaign.update({
+            where: { id: campaignId },
+            data: {
+                status: 'sent',
+                sentAt: new Date(),
+                stats: {
+                    upsert: {
+                        create: {
+                            sent: results.sent,
+                            opened: 0,
+                            clicked: 0
+                        },
+                        update: {
+                            sent: results.sent
+                        }
+                    }
+                }
+            }
         });
 
         return NextResponse.json({

@@ -1,9 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getContacts, addContact, deleteContact } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-    const contacts = getContacts();
-    return NextResponse.json(contacts);
+    try {
+        const contacts = await prisma.contact.findMany({
+            where: {
+                deletedAt: null // Only fetch non-deleted contacts
+            },
+            include: {
+                campaigns: {
+                    include: {
+                        campaign: {
+                            select: { id: true, name: true, status: true }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // Transform tags from string to array for frontend compatibility if needed
+        const formattedContacts = contacts.map(contact => ({
+            ...contact,
+            tags: contact.tags ? contact.tags.split(',') : [],
+            campaigns: contact.campaigns.map(cc => cc.campaign)
+        }));
+
+        return NextResponse.json(formattedContacts);
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Failed to fetch contacts' },
+            { status: 500 }
+        );
+    }
 }
 
 export async function POST(request: NextRequest) {
@@ -18,15 +47,22 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const contact = addContact({
-            name,
-            email,
-            company: company || '',
-            tags: tags || [],
+        const contact = await prisma.contact.create({
+            data: {
+                name,
+                email,
+                company: company || '',
+                tags: Array.isArray(tags) ? tags.join(',') : tags || '',
+                source: 'manual'
+            }
         });
 
-        return NextResponse.json(contact, { status: 201 });
+        return NextResponse.json({
+            ...contact,
+            tags: contact.tags ? contact.tags.split(',') : []
+        }, { status: 201 });
     } catch (error) {
+        console.error('Error creating contact:', error);
         return NextResponse.json(
             { error: 'Failed to create contact' },
             { status: 500 }
@@ -46,13 +82,11 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        const deleted = deleteContact(id);
-        if (!deleted) {
-            return NextResponse.json(
-                { error: 'Contact not found' },
-                { status: 404 }
-            );
-        }
+        // Soft Delete: Set deletedAt to now instead of removing the row
+        await prisma.contact.update({
+            where: { id },
+            data: { deletedAt: new Date() }
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {

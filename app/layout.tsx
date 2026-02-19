@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "MailFlow - Cold Email Automation",
@@ -21,10 +22,12 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <div className="app-container">
-          <Sidebar />
-          <main className="main-content">{children}</main>
-        </div>
+        <Providers>
+          <div className="app-container">
+            <Sidebar />
+            <main className="main-content">{children}</main>
+          </div>
+        </Providers>
       </body>
     </html>
   );

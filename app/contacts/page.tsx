@@ -8,6 +8,8 @@ interface Contact {
     email: string;
     company: string;
     tags: string[];
+    source: string;
+    campaigns: Array<{ id: string; name: string; status: string }>;
     createdAt: string;
 }
 
@@ -16,9 +18,12 @@ export default function ContactsPage() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
     const [form, setForm] = useState({ name: '', email: '', company: '', tags: '' });
     const [csvText, setCsvText] = useState('');
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [filterCampaign, setFilterCampaign] = useState<string>('all');
 
     useEffect(() => {
         fetchContacts();
@@ -100,7 +105,8 @@ export default function ContactsPage() {
         fetchContacts();
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
         if (!confirm('Are you sure you want to delete this contact?')) return;
 
         try {
@@ -108,79 +114,191 @@ export default function ContactsPage() {
             if (res.ok) {
                 showToast('Contact deleted', 'success');
                 fetchContacts();
+                if (selectedContact?.id === id) {
+                    setShowDetailModal(false);
+                    setSelectedContact(null);
+                }
             }
         } catch (error) {
             showToast('Failed to delete contact', 'error');
         }
     };
 
+    const openContactDetails = (contact: Contact) => {
+        setSelectedContact(contact);
+        setShowDetailModal(true);
+    };
+
+    // Helper to parse tags and extract notes
+    const getParsedDetails = (contact: Contact) => {
+        let notes = '';
+        let cleanTags: string[] = [];
+
+        contact.tags.forEach(tag => {
+            if (tag.includes('| REASON:') || tag.includes('| NOTES:')) {
+                const parts = tag.split(/\| (REASON|NOTES):/);
+                if (parts[0].trim()) cleanTags.push(parts[0].trim());
+                if (parts[2]) notes = parts[2].trim();
+            } else if (tag.includes('NOTES:')) {
+                const parts = tag.split('NOTES:');
+                if (parts[0].trim()) cleanTags.push(parts[0].trim());
+                notes = parts[1].trim();
+            } else {
+                cleanTags.push(tag);
+            }
+        });
+
+        return { cleanTags, notes };
+    };
+
+    // Extract unique campaigns for filter dropdown
+    const uniqueCampaigns = Array.from(new Set(
+        contacts.flatMap(c => c.campaigns ? c.campaigns.map(camp => camp.name) : [])
+    )).sort();
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    // ... existing useEffect ...
+
+    // Reset page on filter change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterCampaign]);
+
+    // ... existing fetching ...
+
+    const filteredContacts = filterCampaign === 'all'
+        ? contacts
+        : contacts.filter(c => c.campaigns?.some(camp => camp.name === filterCampaign));
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredContacts.length / itemsPerPage);
+    const paginatedContacts = filteredContacts.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
     if (loading) {
-        return (
-            <div className="loading">
-                <div className="spinner"></div>
-            </div>
-        );
+        // ... existing loading ...
     }
+
+    const { cleanTags, notes } = selectedContact ? getParsedDetails(selectedContact) : { cleanTags: [], notes: '' };
 
     return (
         <div>
-            <header className="page-header">
-                <div>
-                    <h1 className="page-title">Contacts</h1>
-                    <p className="page-subtitle">Manage your email recipients</p>
-                </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <button className="btn btn-secondary" onClick={() => setShowImportModal(true)}>
-                        📥 Import CSV
-                    </button>
-                    <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                        ➕ Add Contact
-                    </button>
-                </div>
-            </header>
+            {/* ... headers ... */}
 
-            {contacts.length > 0 ? (
+            {/* Campaign Filter - keep existing code */}
+            {uniqueCampaigns.length > 0 && (
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Filter by Campaign:</label>
+                    <select
+                        className="form-select"
+                        style={{ width: 'auto', padding: '8px 12px' }}
+                        value={filterCampaign}
+                        onChange={(e) => setFilterCampaign(e.target.value)}
+                    >
+                        <option value="all">All Campaigns</option>
+                        {uniqueCampaigns.map(camp => (
+                            <option key={camp} value={camp}>{camp}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
+            {filteredContacts.length > 0 ? (
                 <div className="table-container">
                     <table className="table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Company</th>
-                                <th>Tags</th>
-                                <th>Actions</th>
+                                <th style={{ padding: '8px 12px' }}>Name</th>
+                                <th style={{ padding: '8px 12px' }}>Email</th>
+                                <th style={{ padding: '8px 12px' }}>Company</th>
+                                <th style={{ padding: '8px 12px' }}>Tags</th>
+                                <th style={{ padding: '8px 12px' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {contacts.map((contact) => (
-                                <tr key={contact.id}>
-                                    <td style={{ fontWeight: 500 }}>{contact.name}</td>
-                                    <td>{contact.email}</td>
-                                    <td>{contact.company || '—'}</td>
-                                    <td>
-                                        {contact.tags.map((tag) => (
-                                            <span key={tag} className="tag tag-primary">{tag}</span>
-                                        ))}
-                                    </td>
-                                    <td>
-                                        <button
-                                            className="btn btn-danger btn-sm"
-                                            onClick={() => handleDelete(contact.id)}
-                                        >
-                                            🗑️
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {paginatedContacts.map((contact) => {
+                                const { cleanTags } = getParsedDetails(contact);
+                                return (
+                                    <tr
+                                        key={contact.id}
+                                        onClick={() => openContactDetails(contact)}
+                                        style={{ cursor: 'pointer', height: '48px' }}
+                                        className="hover:bg-gray-50 transition-colors"
+                                    >
+                                        <td style={{ fontWeight: 500, color: 'var(--primary-color)', padding: '8px 12px' }}>
+                                            {contact.name}
+                                        </td>
+                                        <td style={{ padding: '8px 12px' }}>{contact.email}</td>
+                                        <td style={{ padding: '8px 12px' }}>{contact.company || '—'}</td>
+                                        <td style={{ padding: '8px 12px' }}>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                {cleanTags.slice(0, 3).map((tag) => (
+                                                    <span key={tag} className="tag tag-primary" style={{ padding: '2px 8px', fontSize: '0.75rem' }}>{tag}</span>
+                                                ))}
+                                                {cleanTags.length > 3 && (
+                                                    <span className="tag" style={{ background: '#eee', color: '#666', padding: '2px 8px', fontSize: '0.75rem' }}>
+                                                        +{cleanTags.length - 3}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '8px 12px' }}>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={(e) => handleDelete(contact.id, e)}
+                                                title="Delete Contact"
+                                                style={{ padding: '4px 8px' }}
+                                            >
+                                                🗑️
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '16px', gap: '12px' }}>
+                            <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </button>
+                                <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="card">
                     <div className="empty-state">
                         <div className="empty-state-icon">👥</div>
-                        <div className="empty-state-title">No contacts yet</div>
-                        <p>Add contacts to start building your audience</p>
+                        <div className="empty-state-title">No contacts found</div>
+                        <p>Try adjusting your filters or add new contacts.</p>
                         <button className="btn btn-primary" style={{ marginTop: '20px' }} onClick={() => setShowModal(true)}>
                             Add Your First Contact
                         </button>
@@ -288,6 +406,129 @@ export default function ContactsPage() {
                 </div>
             )}
 
+            {/* Contact Detail Modal */}
+            {showDetailModal && selectedContact && (
+                <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+                    <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">Contact Details</h2>
+                            <button className="modal-close" onClick={() => setShowDetailModal(false)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+                                <div style={{
+                                    width: '64px', height: '64px',
+                                    background: 'var(--primary-color)', color: 'white',
+                                    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '24px', fontWeight: 'bold', marginRight: '16px'
+                                }}>
+                                    {selectedContact.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '20px' }}>{selectedContact.name}</h3>
+                                    <p style={{ margin: '4px 0 0', color: 'var(--text-muted)' }}>{selectedContact.company}</p>
+                                </div>
+                            </div>
+
+                            <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                                <div>
+                                    <label className="form-label" style={{ fontSize: '12px' }}>EMAIL</label>
+                                    <div style={{ fontSize: '15px' }}>
+                                        <a href={`mailto:${selectedContact.email}`} style={{ color: 'var(--primary-color)', textDecoration: 'none' }}>
+                                            {selectedContact.email}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="form-label" style={{ fontSize: '12px' }}>SOURCE</label>
+                                    <div style={{ fontSize: '15px' }}>
+                                        {selectedContact.source.startsWith('verified-web') ? (
+                                            <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                ✅ Verified Public
+                                            </span>
+                                        ) : selectedContact.source}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {selectedContact.campaigns && selectedContact.campaigns.length > 0 && (
+                                <div style={{ marginBottom: '24px' }}>
+                                    <label className="form-label" style={{ fontSize: '12px' }}>ASSOCIATED CAMPAIGNS</label>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                                        {selectedContact.campaigns.map(camp => (
+                                            <span key={camp.id} className="tag" style={{
+                                                background: 'rgba(236, 72, 153, 0.1)',
+                                                color: '#db2777',
+                                                border: '1px solid rgba(236, 72, 153, 0.2)',
+                                                padding: '4px 10px'
+                                            }}>
+                                                📌 {camp.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedContact.source.includes('http') && (
+                                <div style={{ marginBottom: '24px' }}>
+                                    <label className="form-label" style={{ fontSize: '12px' }}>SOURCE URL</label>
+                                    <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '4px', fontSize: '13px' }}>
+                                        <a
+                                            href={selectedContact.source.split('|')[1]?.trim()}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{ color: 'var(--primary-color)', wordBreak: 'break-all' }}
+                                        >
+                                            {selectedContact.source.split('|')[1]?.trim()}
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+
+                            {cleanTags.length > 0 && (
+                                <div style={{ marginBottom: '24px' }}>
+                                    <label className="form-label" style={{ fontSize: '12px' }}>TAGS</label>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                                        {cleanTags.map(tag => (
+                                            <span key={tag} className="tag tag-primary" style={{ padding: '4px 10px' }}>{tag}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {notes && (
+                                <div>
+                                    <label className="form-label" style={{ fontSize: '12px' }}>AI ANALYSIS / NOTES</label>
+                                    <div style={{
+                                        background: '#fff8e6',
+                                        border: '1px solid #fed7aa',
+                                        borderRadius: '6px',
+                                        padding: '12px',
+                                        fontSize: '14px',
+                                        lineHeight: '1.5',
+                                        color: '#7c2d12',
+                                        whiteSpace: 'pre-wrap'
+                                    }}>
+                                        {notes}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+                            <button
+                                className="btn btn-danger"
+                                onClick={(e) => handleDelete(selectedContact.id, e)}
+                            >
+                                Delete Contact
+                            </button>
+                            <button className="btn btn-secondary" onClick={() => setShowDetailModal(false)}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Toast */}
             {toast && (
                 <div className={`toast toast-${toast.type}`}>
@@ -297,3 +538,5 @@ export default function ContactsPage() {
         </div>
     );
 }
+// Add these snippets to globals.css if not present, but for now relying on existing styles
+// If hover:bg-gray-50 isn't working, we might need inline style for tr:hover

@@ -9,10 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@prisma/client": "^5.10.2",
     "dotenv": "^17.3.1",
     "lucide-react": "^0.562.0",
     "next": "16.1.4",
+    "next-auth": "^4.24.13",
     "nodemailer": "^8.0.1",
+    "prisma": "^5.10.2",
     "puppeteer": "^24.37.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",

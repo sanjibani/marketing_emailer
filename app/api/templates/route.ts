@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTemplates, addTemplate, updateTemplate, deleteTemplate } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-    const templates = getTemplates();
-    return NextResponse.json(templates);
+    try {
+        const templates = await prisma.template.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        return NextResponse.json(templates);
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Failed to fetch templates' },
+            { status: 500 }
+        );
+    }
 }
 
 export async function POST(request: NextRequest) {
@@ -18,10 +27,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const template = addTemplate({
-            name,
-            subject,
-            body: templateBody,
+        const template = await prisma.template.create({
+            data: {
+                name,
+                subject,
+                body: templateBody
+            }
         });
 
         return NextResponse.json(template, { status: 201 });
@@ -45,13 +56,10 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        const template = updateTemplate(id, updates);
-        if (!template) {
-            return NextResponse.json(
-                { error: 'Template not found' },
-                { status: 404 }
-            );
-        }
+        const template = await prisma.template.update({
+            where: { id },
+            data: updates
+        });
 
         return NextResponse.json(template);
     } catch (error) {
@@ -74,13 +82,9 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        const deleted = deleteTemplate(id);
-        if (!deleted) {
-            return NextResponse.json(
-                { error: 'Template not found' },
-                { status: 404 }
-            );
-        }
+        await prisma.template.delete({
+            where: { id }
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {
