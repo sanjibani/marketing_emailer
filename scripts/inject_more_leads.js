@@ -7,6 +7,7 @@ const newLeads = [
         name: "Mark Baker",
         email: "mark.baker@shape-london.co.uk",
         company: "Shape Architecture",
+        country: "UK",
         source: "verified-web|https://shapearchitecture.co.uk",
         tags: ["high-net-worth", "architecture", "director", "verified"]
     },
@@ -44,6 +45,7 @@ const newLeads = [
         name: "Michael Easton",
         email: "michael.easton@hayhillwealth.com",
         company: "Hay Hill Wealth",
+        country: "UK",
         source: "verified-web|https://hayhillwealth.com",
         tags: ["ultra-high-net-worth", "finance", "ceo", "verified"]
     },
@@ -103,6 +105,7 @@ async function main() {
             update: {
                 name: lead.name,
                 company: lead.company,
+                country: lead.country || null,
                 source: lead.source,
                 tags: tags,
                 deletedAt: null // Ensure not deleted
@@ -111,6 +114,7 @@ async function main() {
                 name: lead.name,
                 email: lead.email,
                 company: lead.company,
+                country: lead.country || null,
                 source: lead.source,
                 tags: tags
             }

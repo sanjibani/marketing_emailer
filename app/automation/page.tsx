@@ -278,15 +278,26 @@ export default function AutomationPage() {
                         </div>
                     )}
 
-                    <button
-                        className="btn btn-primary"
-                        style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
-                        onClick={handleSchedule}
-                        disabled={scheduling || !selectedCampaignId}
-                    >
-                        <Zap size={16} />
-                        {scheduling ? 'Scheduling…' : 'Schedule Smart Send'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                            className="btn btn-primary"
+                            style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
+                            onClick={handleSchedule}
+                            disabled={scheduling || !selectedCampaignId}
+                        >
+                            <Zap size={16} />
+                            {scheduling ? 'Scheduling…' : 'Schedule Smart Send'}
+                        </button>
+                        <button
+                            className="btn btn-danger"
+                            style={{ flex: 1, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
+                            onClick={() => handleCancel(selectedCampaignId)}
+                            disabled={scheduling || !selectedCampaignId}
+                        >
+                            <StopCircle size={16} />
+                            Cancel Pending
+                        </button>
+                    </div>
 
                     {scheduleResult && (
                         <div style={{

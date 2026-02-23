@@ -67,6 +67,9 @@ model Contact {
   name      String
   email     String   @unique
   company   String?
+  country   String?
+  website   String?
+  niche     String?
   tags      String?  // Stored as comma-separated string or JSON string if needed, keeping simple for now
   source    String   @default("manual") // "manual", "csv", "ai"
   deletedAt DateTime? // Soft delete field

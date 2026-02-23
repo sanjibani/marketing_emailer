@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, email, company, notes, tags, campaignId } = body;
+        const { name, email, company, country, notes, tags, campaignId } = body;
 
         if (!name || !email) {
             return NextResponse.json(
@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
                     name,
                     email,
                     company: company || '',
+                    country: country || null,
                     tags: Array.isArray(tags) ? tags.join(',') : tags || '',
                     source: 'ai',
                 }

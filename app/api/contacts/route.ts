@@ -14,6 +14,9 @@ export async function GET() {
                             select: { id: true, name: true, status: true }
                         }
                     }
+                },
+                scheduledEmails: {
+                    select: { status: true }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -23,7 +26,8 @@ export async function GET() {
         const formattedContacts = contacts.map(contact => ({
             ...contact,
             tags: contact.tags ? contact.tags.split(',') : [],
-            campaigns: contact.campaigns.map(cc => cc.campaign)
+            campaigns: contact.campaigns.map(cc => cc.campaign),
+            hasBeenEmailed: contact.scheduledEmails.some(se => se.status === 'sent')
         }));
 
         return NextResponse.json(formattedContacts);
@@ -38,7 +42,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name, email, company, tags } = body;
+        const { name, email, company, country, website, niche, tags } = body;
 
         if (!name || !email) {
             return NextResponse.json(
@@ -52,6 +56,9 @@ export async function POST(request: NextRequest) {
                 name,
                 email,
                 company: company || '',
+                country: country || null,
+                website: website || null,
+                niche: niche || null,
                 tags: Array.isArray(tags) ? tags.join(',') : tags || '',
                 source: 'manual'
             }

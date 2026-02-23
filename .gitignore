@@ -49,6 +49,15 @@ next-env.d.ts
 .env.test.local
 .env.production.local
 
-# database
+# database & data dumps
 *.db
 *.sqlite
+*.sqlite3
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json

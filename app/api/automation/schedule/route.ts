@@ -112,7 +112,10 @@ export async function POST(request: NextRequest) {
         }
 
         // Bulk create scheduled emails
-        await prisma.scheduledEmail.createMany({ data: schedules });
+        // Prisma SQLite doesn't support createMany, so we use a transaction
+        await prisma.$transaction(
+            schedules.map(schedule => prisma.scheduledEmail.create({ data: schedule }))
+        );
 
         // Update campaign to 'scheduled'
         await prisma.campaign.update({
